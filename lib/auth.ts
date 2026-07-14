@@ -4,21 +4,40 @@ import { createClient } from '@/lib/supabase/server';
 
 export async function getSessionWithProfile(allowAnonymous = false) {
   const supabase = await createClient();
-  const {
-    data: { user }
-  } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
 
   if (!user && !allowAnonymous) redirect('/login');
 
   let profile: Profile | null = null;
 
   if (user) {
-    const { data } = await supabase
+    let { data } = await supabase
       .from('profiles')
       .select('id, full_name, email, role, status, wallet_balance, total_earned, referral_code, referred_by, avatar_url, welcome_bonus_granted, created_at')
       .eq('id', user.id)
       .single();
+
     profile = data as Profile | null;
+
+    if (!profile) {
+      const { data: newProfile } = await supabase
+        .from('profiles')
+        .insert({
+          id: user.id,
+          full_name: user.user_metadata?.full_name || 'User',
+          email: user.email,
+          role: 'user',
+          status: 'active',
+          referral_code: Math.random().toString(36).substring(2, 10).toUpperCase(),
+          wallet_balance: 0,
+          total_earned: 0,
+          welcome_bonus_granted: false
+        })
+        .select()
+        .single();
+
+      profile = newProfile as Profile | null;
+    }
 
     if (profile?.status === 'blocked') {
       await supabase.auth.signOut();
@@ -27,7 +46,8 @@ export async function getSessionWithProfile(allowAnonymous = false) {
 
     const { data: platformData } = await supabase.from('platform_settings').select('*').eq('id', 1).single();
     const platform = platformData as PlatformSettings | null;
-    if (platform?.maintenance_mode && profile && !['staff_admin', 'super_admin'].includes(profile.role)) {
+
+    if (platform?.maintenance_mode && profile && !['staff_admin', 'super_admin'].includes(profile.role || 'user')) {
       redirect('/maintenance');
     }
   }
@@ -37,7 +57,7 @@ export async function getSessionWithProfile(allowAnonymous = false) {
 
 export async function requireRole(roles: Array<Profile['role']>) {
   const { profile } = await getSessionWithProfile();
-  if (!profile || !roles.includes(profile.role)) redirect('/dashboard');
+  if (!profile || !roles.includes(profile.role || 'user')) redirect('/dashboard');
   return profile;
 }
 
