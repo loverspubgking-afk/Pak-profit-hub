@@ -1,0 +1,93 @@
+name: Deploy Pak Profit Hub
+
+on:
+  push:
+    branches:
+      - main
+      - arena/01a029b7-pak-profit-hub
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: true
+
+jobs:
+  # 1) Apply the Supabase schema (tables, RLS, storage bucket, seed data)
+  init-supabase:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Supabase schema
+        env:
+          SUPABASE_PAT: ${{ secrets.SUPABASE_PERSONAL_ACCESS_TOKEN }}
+        run: |
+          if [ -z "$SUPABASE_PAT" ]; then
+            echo "::error::Repository secret SUPABASE_PERSONAL_ACCESS_TOKEN is not set."
+            exit 1
+          fi
+          python3 -c "import json; print(json.dumps({'query': open('supabase/schema.sql').read()}))" > /tmp/schema.json
+          curl -fsS -X POST "https://api.supabase.com/v1/projects/brcuwxsqgimhzuclbich/database/query" \
+            -H "Authorization: Bearer $SUPABASE_PAT" \
+            -H "Content-Type: application/json" \
+            --data @/tmp/schema.json
+
+      - name: Verify tables
+        env:
+          SUPABASE_PAT: ${{ secrets.SUPABASE_PERSONAL_ACCESS_TOKEN }}
+        run: |
+          curl -fsS -X POST "https://api.supabase.com/v1/projects/brcuwxsqgimhzuclbich/database/query" \
+            -H "Authorization: Bearer $SUPABASE_PAT" \
+            -H "Content-Type: application/json" \
+            -d '{"query":"select table_name from information_schema.tables where table_schema = ''public'' and table_name in (''profiles'',''plans'',''user_plans'',''deposits'',''withdrawals'',''transactions'',''notifications'',''brand_settings'',''platform_settings'',''payment_methods'') order by table_name;"}'
+
+  # 2) Deploy to Vercel production
+  deploy-vercel:
+    needs: init-supabase
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Link Vercel project
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "::error::Repository secret VERCEL_TOKEN is not set."
+            exit 1
+          fi
+          npx -y vercel@latest link --yes --project pak-profit-hub --scope loverspubgking-1466 --token "$VERCEL_TOKEN" \
+            || npx -y vercel@latest link --yes --scope loverspubgking-1466 --token "$VERCEL_TOKEN"
+
+      - name: Deploy to Vercel (production)
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_ANON: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SITE_URL: "https://pak-profit-hub.vercel.app"
+        run: |
+          npx -y vercel@latest deploy --prod --yes --scope loverspubgking-1466 --token "$VERCEL_TOKEN" \
+            --build-env NEXT_PUBLIC_SUPABASE_URL="$SUPABASE_URL" \
+            --build-env NEXT_PUBLIC_SUPABASE_ANON_KEY="$SUPABASE_ANON" \
+            --build-env SUPABASE_SERVICE_ROLE_KEY="$SUPABASE_SERVICE" \
+            --build-env NEXT_PUBLIC_SITE_URL="$SITE_URL" \
+            --env NEXT_PUBLIC_SUPABASE_URL="$SUPABASE_URL" \
+            --env NEXT_PUBLIC_SUPABASE_ANON_KEY="$SUPABASE_ANON" \
+            --env SUPABASE_SERVICE_ROLE_KEY="$SUPABASE_SERVICE" \
+            --env NEXT_PUBLIC_SITE_URL="$SITE_URL" \
+            2>&1 | tee /tmp/deploy.log
+
+      - name: Report deployment URL
+        run: |
+          URL=$(grep -oE 'https://[a-z0-9-]+\.vercel\.app' /tmp/deploy.log | tail -1)
+          PROD="https://pak-profit-hub.vercel.app"
+          echo "Deployment URL: ${URL:-$PROD}"
+          echo "Production URL: $PROD"
+          echo "### Deployment complete" >> "$GITHUB_STEP_SUMMARY"
+          echo "Production URL: $PROD" >> "$GITHUB_STEP_SUMMARY"
