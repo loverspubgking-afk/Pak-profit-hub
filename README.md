@@ -52,10 +52,49 @@ update profiles set role = 'super_admin' where email = 'you@example.com';
 
 ## Deployment (Vercel)
 
-1. Push this repo to GitHub.
-2. Import it in Vercel (framework preset: Next.js).
-3. Add the 4 environment variables above (Production + Preview).
+### Quick deploy (recommended)
+
+The repo includes a one-shot deploy script that applies the Supabase schema AND
+deploys to Vercel production in one go:
+
+**macOS / Linux / Git Bash:**
+```bash
+export SUPABASE_PERSONAL_ACCESS_TOKEN="sbp_..."
+export VERCEL_TOKEN="vcp_..."
+export NEXT_PUBLIC_SUPABASE_URL="https://xxxx.supabase.co"
+export NEXT_PUBLIC_SUPABASE_ANON_KEY="eyJ..."
+export SUPABASE_SERVICE_ROLE_KEY="eyJ..."
+export NEXT_PUBLIC_SITE_URL="https://pak-profit-hub.vercel.app"
+bash scripts/deploy.sh
+```
+
+**Windows PowerShell:**
+```powershell
+$env:SUPABASE_PERSONAL_ACCESS_TOKEN = "sbp_..."
+$env:VERCEL_TOKEN                   = "vcp_..."
+$env:NEXT_PUBLIC_SUPABASE_URL       = "https://xxxx.supabase.co"
+$env:NEXT_PUBLIC_SUPABASE_ANON_KEY  = "eyJ..."
+$env:SUPABASE_SERVICE_ROLE_KEY      = "eyJ..."
+$env:NEXT_PUBLIC_SITE_URL           = "https://pak-profit-hub.vercel.app"
+.\scripts\deploy.ps1
+```
+
+The script: (1) runs [`supabase/schema.sql`](supabase/schema.sql) through the
+Supabase Management API, (2) deploys to Vercel with all env vars, and (3) prints
+the live URL.
+
+### Manual deploy
+
+1. Run [`supabase/schema.sql`](supabase/schema.sql) in the **Supabase SQL Editor** (or via the script above).
+2. On Vercel: New Project → import this repo (Next.js preset).
+3. Add env vars: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SITE_URL`.
 4. Deploy.
+
+### Make yourself admin (after first signup)
+
+```sql
+update profiles set role = 'super_admin' where email = 'you@example.com';
+```
 
 Note: Poppins is self-hosted (`app/fonts/`), so builds never depend on Google Fonts availability.
 
