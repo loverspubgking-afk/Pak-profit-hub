@@ -11,7 +11,7 @@ export async function getSessionWithProfile(allowAnonymous = false) {
   let profile: Profile | null = null;
 
   if (user) {
-    let { data } = await supabase
+    const { data } = await supabase
       .from('profiles')
       .select('id, full_name, email, role, status, wallet_balance, total_earned, referral_code, referred_by, avatar_url, welcome_bonus_granted, created_at')
       .eq('id', user.id)

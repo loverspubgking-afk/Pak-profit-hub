@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { AuthSubmitButton } from '@/components/auth-submit-button';
 import { BrandLogo } from '@/components/brand-logo';
 import { signUpAction } from '@/app/actions';
-import { SignupToast } from '@/components/signup-toast';
 
 export default async function SignupPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const params = await searchParams;

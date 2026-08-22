@@ -4,12 +4,9 @@ import { submitWithdrawalAction } from '@/app/actions';
 import { getPlatformSettings, getSessionWithProfile } from '@/lib/auth';
 import { formatCurrency } from '@/lib/utils';
 
-export default async function WithdrawPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+export default async function WithdrawPage() {
   const { profile } = await getSessionWithProfile();
   const settings = await getPlatformSettings();
-  const params = await searchParams;
-  const message = typeof params.success === 'string' ? params.success : typeof params.error === 'string' ? params.error : null;
-  const type = params.success ? 'success' : params.error ? 'error' : null;
 
   return (
     <AppShell profile={profile!} brandName={settings?.default_brand_name || 'Pak Profit Hub'}>
