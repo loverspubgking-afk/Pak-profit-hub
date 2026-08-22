@@ -14,15 +14,27 @@ function getCountdown(startedAt: string, claimedDays: number) {
   return `${String(hours).padStart(2, '0')}h ${String(minutes).padStart(2, '0')}m`;
 }
 
-export default async function DashboardPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+function getPlanProgress(plan: {
+  started_at: string;
+  duration_days: number;
+  claimed_days: number;
+  collected_amount: number;
+  total_payout: number;
+}) {
+  const now = Date.now();
+  const elapsedDays = Math.floor((now - new Date(plan.started_at).getTime()) / (24 * 60 * 60 * 1000));
+  const eligibleDays = Math.min(plan.duration_days, Math.max(elapsedDays, 0));
+  const dueDays = Math.max(eligibleDays - plan.claimed_days, 0);
+  const progress = Math.min((plan.collected_amount / plan.total_payout) * 100, 100);
+  return { dueDays, progress };
+}
+
+export default async function DashboardPage() {
   const { profile } = await getSessionWithProfile();
   const admin = createAdminClient();
   const settings = await getPlatformSettings();
-  const params = await searchParams;
-  const success = typeof params.success === 'string' ? params.success : null;
-  const error = typeof params.error === 'string' ? params.error : null;
 
-  if (profile && !(profile as any).welcome_bonus_granted) {
+  if (profile && !profile.welcome_bonus_granted) {
     const { data: authUser } = await admin.auth.admin.getUserById(profile.id);
     if (authUser.user?.email_confirmed_at) {
       await admin.from('profiles').update({
@@ -124,10 +136,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           ) : (
             <div className="grid-3">
               {activePlans.map((plan) => {
-                const elapsedDays = Math.floor((Date.now() - new Date(plan.started_at).getTime()) / (24 * 60 * 60 * 1000));
-                const eligibleDays = Math.min(plan.duration_days, Math.max(elapsedDays, 0));
-                const dueDays = Math.max(eligibleDays - plan.claimed_days, 0);
-                const progress = Math.min((plan.collected_amount / plan.total_payout) * 100, 100);
+                const { dueDays, progress } = getPlanProgress(plan);
                 return (
                   <div className="plan-card" key={plan.id}>
                     <div className="plan-topbar" />

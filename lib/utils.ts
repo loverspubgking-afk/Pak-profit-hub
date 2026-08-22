@@ -40,7 +40,7 @@ export function getInitials(name?: string | null, email?: string | null) {
     .join('');
 }
 
-export function getDisplayName(user?: { full_name?: string | null; email?: string | null }) {
+export function getDisplayName(user?: { full_name?: string | null; email?: string | null } | null) {
   return user?.full_name || user?.email?.split('@')[0] || 'User';
 }
 

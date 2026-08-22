@@ -45,7 +45,7 @@ export default function TermsPage() {
               <FileText className="text-[var(--emerald)]" size={22} /> 1. Acceptance of Terms
             </h2>
             <p>
-              These Terms constitute a legally binding agreement between you ("User", "you") and Pak Profit Hub ("Company", "we", "us"). 
+              These Terms constitute a legally binding agreement between you (&quot;User&quot;, &quot;you&quot;) and Pak Profit Hub (&quot;Company&quot;, &quot;we&quot;, &quot;us&quot;). 
               By registering an account, making a deposit, purchasing any plan, or using any feature of the platform, you acknowledge that you have read, understood, and agree to these Terms.
             </p>
 

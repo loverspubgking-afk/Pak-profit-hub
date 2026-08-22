@@ -45,6 +45,16 @@ export interface PlatformSettings {
   announcement_active: boolean;
   announcement_text: string | null;
   default_brand_name: string;
+  fbr_tax_receipt_url: string | null;
+}
+
+export interface PaymentMethod {
+  id: string;
+  label: string;
+  public_details: string | null;
+  is_active: boolean;
+  sort_order: number;
+  created_at: string;
 }
 
 export interface Plan {

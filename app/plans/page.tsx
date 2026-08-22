@@ -4,12 +4,10 @@ import { getPlatformSettings, getSessionWithProfile } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { formatCurrency } from '@/lib/utils';
 
-export default async function PlansPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+export default async function PlansPage() {
   const { profile } = await getSessionWithProfile();
   const settings = await getPlatformSettings();
   const admin = createAdminClient();
-  const params = await searchParams;
-  const error = typeof params.error === 'string' ? params.error : null;
   const { data: plans } = await admin.from('plans').select('*').eq('is_active', true).order('sort_order');
 
   return (

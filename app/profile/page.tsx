@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { AppShell } from '@/components/app-shell';
 import { AuthSubmitButton } from '@/components/auth-submit-button';
 import { updateProfileAction } from '@/app/actions';
@@ -5,7 +6,7 @@ import { getPlatformSettings, getSessionWithProfile } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { formatCurrency } from '@/lib/utils';
 
-export default async function ProfilePage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+export default async function ProfilePage() {
   const { profile } = await getSessionWithProfile();
   const settings = await getPlatformSettings();
   const admin = createAdminClient();
@@ -64,9 +65,11 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
                 border: '1px solid var(--border-color)',
                 boxShadow: 'var(--card-shadow)'
               }}>
-                <img 
+                <Image 
                   src={fbrTaxReceiptUrl} 
                   alt="FBR Tax Receipt" 
+                  width={1200}
+                  height={520}
                   style={{ width: '100%', height: 260, objectFit: 'cover', display: 'block' }}
                 />
               </div>

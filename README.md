@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Pak Profit Hub
 
-## Getting Started
+Premium Pakistani daily earning / investment platform built with **Next.js (App Router) + Supabase**. Fixed-value plans, wallet management, referrals, deposits/withdrawals with manual admin approval, and a full role-based admin panel.
 
-First, run the development server:
+## Stack
+
+- **Next.js 16** (React 19, TypeScript, App Router, Server Actions)
+- **Supabase** (Auth, Postgres, Storage for payment proofs)
+- **Tailwind CSS 4 + custom CSS design system**
+- **Sonner** (toasts) & **lucide-react** (icons)
+
+## Features
+
+- Email/password auth (Supabase Auth) with email verification
+- Welcome bonus + referral bonus engine (triggered after first approved deposit)
+- Fixed-value earning plans with 24h collection cycles
+- Manual deposit approval (proof screenshot upload to Supabase Storage)
+- Withdrawal requests with admin approval / rejection (auto refund)
+- Wallet, transactions, notifications, leaderboard, support pages
+- Role-based admin panel (`user`, `staff_admin`, `super_admin`)
+  - Super admin: branding, plans, platform settings, payment methods, FBR tax receipt URL
+- Marketing landing page with maintenance-mode support
+
+## Getting started
 
 ```bash
+npm install
+cp .env.example .env.local   # fill in Supabase credentials
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Variable | Description |
+| --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public anon key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Service role key (server-only, admin operations) |
+| `NEXT_PUBLIC_SITE_URL` | Public site URL (email redirects + referral links) |
 
-## Learn More
+## Database setup
 
-To learn more about Next.js, take a look at the following resources:
+Run [`supabase/schema.sql`](supabase/schema.sql) in the **Supabase SQL Editor** before first use. It creates all tables, indexes, row-level security policies, the `payment-proofs` storage bucket, and seeds default brand/platform settings plus 3 starter plans.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+To create the first admin, update the user's role in the `profiles` table:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```sql
+update profiles set role = 'super_admin' where email = 'you@example.com';
+```
 
-## Deploy on Vercel
+## Deployment (Vercel)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Push this repo to GitHub.
+2. Import it in Vercel (framework preset: Next.js).
+3. Add the 4 environment variables above (Production + Preview).
+4. Deploy.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Note: Poppins is self-hosted (`app/fonts/`), so builds never depend on Google Fonts availability.
+
+## Project structure
+
+```
+app/                  # routes (pages) + server actions
+components/           # shared UI components
+lib/                  # types, utils, supabase clients, auth helpers
+supabase/schema.sql   # full database setup script
+public/               # static assets
+```

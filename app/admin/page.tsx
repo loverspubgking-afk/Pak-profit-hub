@@ -9,7 +9,6 @@ import {
   rejectDepositAction,
   rejectWithdrawalAction,
   updateBrandSettingsAction,
-  updateFbrTaxReceiptAction,
   updatePlatformSettingsAction
 } from '@/app/actions';
 import { getPlatformSettings, requireRole } from '@/lib/auth';
@@ -28,7 +27,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     .select('*')
     .order('sort_order');
   const params = await searchParams;
-  const currentTab = tabs.includes((params.tab as any) || '') ? (params.tab as typeof tabs[number]) : 'overview';
+  const rawTab = typeof params.tab === 'string' ? params.tab : '';
+  const currentTab = tabs.includes(rawTab as (typeof tabs)[number]) ? (rawTab as (typeof tabs)[number]) : 'overview';
   const success = typeof params.success === 'string' ? params.success : null;
   const error = typeof params.error === 'string' ? params.error : null;
 
@@ -116,7 +116,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
               <tbody>
                 {(deposits || []).map((deposit) => (
                   <tr key={deposit.id}>
-                    <td>{getDisplayName(deposit.profiles as any)}</td>
+                    <td>{getDisplayName(deposit.profiles)}</td>
                     <td>{formatCurrency(deposit.amount)}</td>
                     <td>{deposit.payment_method}</td>
                     <td>{deposit.reference_number}</td>
@@ -150,7 +150,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
               <tbody>
                 {(withdrawals || []).map((withdrawal) => (
                   <tr key={withdrawal.id}>
-                    <td>{getDisplayName(withdrawal.profiles as any)}</td>
+                    <td>{getDisplayName(withdrawal.profiles)}</td>
                     <td>{formatCurrency(withdrawal.amount)}</td>
                     <td>{withdrawal.payment_method}</td>
                     <td>{withdrawal.account_title} • {withdrawal.account_number}</td>
@@ -259,7 +259,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                 <input 
                   className="input" 
                   name="fbrTaxReceiptUrl" 
-                  defaultValue={(platform as any)?.fbr_tax_receipt_url || ''} 
+                  defaultValue={platform?.fbr_tax_receipt_url || ''} 
                   placeholder="https://example.com/fbr-receipt.png" 
                 />
                 <p className="muted small" style={{ marginTop: 6 }}>Paste a direct image URL. This will appear in the Profile page for every user.</p>
@@ -346,7 +346,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                   {(paymentMethods || []).length === 0 && (
                     <tr><td colSpan={4} className="muted">No payment methods yet.</td></tr>
                   )}
-                  {(paymentMethods || []).map((pm: any) => (
+                  {(paymentMethods || []).map((pm: { id: string; label: string; public_details: string | null; is_active: boolean }) => (
                     <tr key={pm.id}>
                       <td><strong>{pm.label}</strong></td>
                       <td>{pm.public_details}</td>

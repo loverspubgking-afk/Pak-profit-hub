@@ -458,23 +458,7 @@ export async function rejectWithdrawalAction(formData: FormData) {
   redirect('/admin?tab=withdrawals&success=Withdrawal rejected');
 }
 
-// === FBR TAX RECEIPT + PAYMENT METHODS (SUPER ADMIN) ===
-
-export async function updateFbrTaxReceiptAction(formData: FormData) {
-  await assertSuperAdmin();
-  const admin = createAdminClient();
-  
-  const fbrTaxReceiptUrl = cleanText(formData.get('fbrTaxReceiptUrl'));
-
-  await admin.from('platform_settings').upsert({
-    id: 1,
-    fbr_tax_receipt_url: fbrTaxReceiptUrl || null
-  });
-
-  revalidatePath('/profile');
-  revalidatePath('/admin');
-  redirect('/admin?tab=settings&success=FBR Tax Receipt URL updated');
-}
+// === PAYMENT METHODS (SUPER ADMIN) ===
 
 export async function createOrUpdatePaymentMethodAction(formData: FormData) {
   await assertSuperAdmin();

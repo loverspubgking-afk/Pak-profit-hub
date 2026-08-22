@@ -4,13 +4,10 @@ import { submitDepositAction } from '@/app/actions';
 import { getPlatformSettings, getSessionWithProfile } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
 
-export default async function DepositPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+export default async function DepositPage() {
   const { profile } = await getSessionWithProfile();
   const settings = await getPlatformSettings();
   const admin = createAdminClient();
-  const params = await searchParams;
-  const message = typeof params.success === 'string' ? params.success : typeof params.error === 'string' ? params.error : null;
-  const type = params.success ? 'success' : params.error ? 'error' : null;
   const { data: paymentMethods } = await admin.from('payment_methods').select('*').eq('is_active', true).order('sort_order');
 
   return (
